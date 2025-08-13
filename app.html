@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>CRM Мини-Форма</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .menu, .list, .form {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 5px;
+            width: 30%;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .item {
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .item:hover {
+            background: #f0f0f0;
+        }
+
+        .selected {
+            background: yellow;
+        }
+
+        input, select {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+
+        button {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="menu">
+    <h2>Меню</h2>
+    <button onclick="selectType('deals')">Сделки</button>
+    <button onclick="selectType('contacts')">Контакты</button>
+</div>
+
+<div class="list">
+    <h2>Список</h2>
+    <div id="item-list"></div>
+    <button onclick="createNew()">+ Добавить</button>
+</div>
+
+<div class="form">
+    <h2>Содержимое</h2>
+    <form id="data-form" onsubmit="currentId == null ? saveItem() : updateItem(); return false;">
+        <input type="hidden" id="item-id">
+        <div id="form-fields"></div>
+        <button type="submit">💾 Сохранить</button>
+        <button type="button" onclick="deleteItem()">🗑️ Удалить</button>
+    </form>
+</div>
+
+<script>
+    let currentType = null;
+    let currentId = null;
+
+    function selectType(type) {
+        currentType = type;
+        currentId = null;
+        loadList();
+        document.getElementById('form-fields').innerHTML = '';
+    }
+
+    function loadList() {
+        fetch(`index.php?action=list&type=${currentType}`)
+            .then(res => res.json())
+            .then(items => {
+                const list = document.getElementById('item-list');
+                list.innerHTML = '';
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'item';
+                    if (currentType === 'deals') div.textContent = `${item.id}: ${item.name}`;
+                    else if (currentType === 'contacts') div.textContent = `${item.id}: ${item.first_name} ${item.last_name}`;
+                    div.onclick = () => loadItem(item.id);
+                    list.appendChild(div);
+                });
+            });
+    }
+
+    function loadItem(id) {
+        fetch(`index.php?action=item&type=${currentType}&id=${id}`)
+            .then(res => res.json())
+            .then(data => {
+                currentId = id;
+                document.getElementById('item-id').value = data.id;
+
+                let html = '';
+                if (currentType === 'deals') {
+                    html += `<label>Наименование*</label><input id="name" value="${data.name || ''}" required>`;
+                    html += `<label>Сумма</label><input id="sum" type="number" value="${data.sum || 0}">`;
+                    html += `<label>Контакты</label>`;
+                    html += `<select id="contacts" multiple></select>`;
+
+                    fetch(`index.php?action=list&type=contacts`)
+                        .then(res => res.json())
+                        .then(contacts => {
+                            const select = document.getElementById('contacts');
+                            contacts.forEach(c => {
+                                const opt = document.createElement('option');
+                                opt.value = c.id;
+                                opt.text = `${c.id} ${c.first_name} ${c.last_name}`;
+                                if (data.contacts && data.contacts.find(dc => dc.contact_id == c.id)) {
+                                    opt.selected = true;
+                                }
+                                select.appendChild(opt);
+                            });
+                        });
+
+                } else if (currentType === 'contacts') {
+                    html += `<label>Имя*</label><input id="first_name" value="${data.first_name || ''}" required>`;
+                    html += `<label>Фамилия</label><input id="last_name" value="${data.last_name || ''}">`;
+                    html += `<label>Сделки</label>`;
+                    html += `<select id="deals" multiple></select>`;
+
+                    fetch(`index.php?action=list&type=deals`)
+                        .then(res => res.json())
+                        .then(deals => {
+                            const select = document.getElementById('deals');
+                            deals.forEach(d => {
+                                const opt = document.createElement('option');
+                                opt.value = d.id;
+                                opt.text = `${d.id} ${d.name}`;
+                                if (data.deals && data.deals.find(dd => dd.deal_id == d.id)) {
+                                    opt.selected = true;
+                                }
+                                select.appendChild(opt);
+                            });
+                        });
+                }
+
+                document.getElementById('form-fields').innerHTML = html;
+            });
+    }
+
+    function createNew() {
+        currentId = null;
+        document.getElementById('item-id').value = '';
+        let html = '';
+
+        if (currentType === 'deals') {
+            html += `<label>Наименование*</label><input id="name" required>`;
+            html += `<label>Сумма</label><input id="sum" type="number">`;
+            html += `<label>Контакты</label><select id="contacts" multiple></select>`;
+
+            fetch(`index.php?action=list&type=contacts`)
+                .then(res => res.json())
+                .then(contacts => {
+                    const select = document.getElementById('contacts');
+                    contacts.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.id;
+                        opt.text = `${c.id} ${c.first_name} ${c.last_name}`;
+                        select.appendChild(opt);
+                    });
+                });
+
+        } else if (currentType === 'contacts') {
+            html += `<label>Имя*</label><input id="first_name" required>`;
+            html += `<label>Фамилия</label><input id="last_name" required>`;
+            html += `<label>Сделки</label><select id="deals" multiple></select>`;
+
+            fetch(`index.php?action=list&type=deals`)
+                .then(res => res.json())
+                .then(deals => {
+                    const select = document.getElementById('deals');
+                    deals.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d.id;
+                        opt.text = `${d.id} ${d.name}`;
+                        select.appendChild(opt);
+                    });
+                });
+        }
+
+        document.getElementById('form-fields').innerHTML = html;
+    }
+
+    function saveItem() {
+        const data = {};
+
+        if (currentType === 'deals') {
+            data.name = document.getElementById('name').value;
+            data.sum = document.getElementById('sum').value;
+            data.contacts = Array.from(document.getElementById('contacts').selectedOptions).map(opt => opt.value);
+        } else if (currentType === 'contacts') {
+            data.first_name = document.getElementById('first_name').value;
+            data.last_name = document.getElementById('last_name').value;
+            data.deals = Array.from(document.getElementById('deals').selectedOptions).map(opt => opt.value);
+        }
+
+        fetch(`index.php?action=save&type=${currentType}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+            .then(res => res.json())
+            .then(json => {
+                alert("Сохранено");
+                loadList();
+            });
+    }
+
+    function updateItem() {
+        const data = {};
+        const id = document.getElementById('item-id').value;
+        if (id) data.id = id;
+
+        if (currentType === 'deals') {
+            data.name = document.getElementById('name').value;
+            data.sum = document.getElementById('sum').value;
+            data.contacts = Array.from(document.getElementById('contacts').selectedOptions).map(opt => opt.value);
+        } else if (currentType === 'contacts') {
+            data.first_name = document.getElementById('first_name').value;
+            data.last_name = document.getElementById('last_name').value;
+            data.deals = Array.from(document.getElementById('deals').selectedOptions).map(opt => opt.value);
+        }
+
+        fetch(`index.php?action=update&type=${currentType}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+            .then(res => res.json())
+            .then(json => {
+                alert("Обновленно");
+                loadList();
+            });
+    }
+
+    function deleteItem() {
+        const id = document.getElementById('item-id').value;
+        if (!id || !confirm("Удалить этот элемент?")) return;
+
+        fetch(`index.php?action=delete&type=${currentType}&id=${id}`, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            }
+        )
+            .then(res => res.json())
+            .then(json => {
+                alert("Удалено");
+                document.getElementById('form-fields').innerHTML = '';
+                loadList();
+            });
+    }
+
+    // Автоматический запуск при загрузке
+    selectType('deals');
+</script>
+
+</body>
+</html>
