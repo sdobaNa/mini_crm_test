@@ -82,7 +82,7 @@
     }
 
     function loadList() {
-        fetch(`index.php?action=list&type=${currentType}`)
+        fetch(`controller.php?action=list&type=${currentType}`)
             .then(res => res.json())
             .then(items => {
                 const list = document.getElementById('item-list');
@@ -99,7 +99,7 @@
     }
 
     function loadItem(id) {
-        fetch(`index.php?action=item&type=${currentType}&id=${id}`)
+        fetch(`controller.php?action=item&type=${currentType}&id=${id}`)
             .then(res => res.json())
             .then(data => {
                 currentId = id;
@@ -112,7 +112,7 @@
                     html += `<label>Контакты</label>`;
                     html += `<select id="contacts" multiple></select>`;
 
-                    fetch(`index.php?action=list&type=contacts`)
+                    fetch(`controller.php?action=list&type=contacts`)
                         .then(res => res.json())
                         .then(contacts => {
                             const select = document.getElementById('contacts');
@@ -133,7 +133,7 @@
                     html += `<label>Сделки</label>`;
                     html += `<select id="deals" multiple></select>`;
 
-                    fetch(`index.php?action=list&type=deals`)
+                    fetch(`controller.php?action=list&type=deals`)
                         .then(res => res.json())
                         .then(deals => {
                             const select = document.getElementById('deals');
@@ -163,7 +163,7 @@
             html += `<label>Сумма</label><input id="sum" type="number">`;
             html += `<label>Контакты</label><select id="contacts" multiple></select>`;
 
-            fetch(`index.php?action=list&type=contacts`)
+            fetch(`controller.php?action=list&type=contacts`)
                 .then(res => res.json())
                 .then(contacts => {
                     const select = document.getElementById('contacts');
@@ -180,7 +180,7 @@
             html += `<label>Фамилия</label><input id="last_name" required>`;
             html += `<label>Сделки</label><select id="deals" multiple></select>`;
 
-            fetch(`index.php?action=list&type=deals`)
+            fetch(`controller.php?action=list&type=deals`)
                 .then(res => res.json())
                 .then(deals => {
                     const select = document.getElementById('deals');
@@ -209,7 +209,7 @@
             data.deals = Array.from(document.getElementById('deals').selectedOptions).map(opt => opt.value);
         }
 
-        fetch(`index.php?action=save&type=${currentType}`, {
+        fetch(`controller.php?action=save&type=${currentType}`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
@@ -236,7 +236,7 @@
             data.deals = Array.from(document.getElementById('deals').selectedOptions).map(opt => opt.value);
         }
 
-        fetch(`index.php?action=update&type=${currentType}`, {
+        fetch(`controller.php?action=update&type=${currentType}`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
@@ -252,7 +252,7 @@
         const id = document.getElementById('item-id').value;
         if (!id || !confirm("Удалить этот элемент?")) return;
 
-        fetch(`index.php?action=delete&type=${currentType}&id=${id}`, {
+        fetch(`controller.php?action=delete&type=${currentType}&id=${id}`, {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json'

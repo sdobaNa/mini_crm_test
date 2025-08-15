@@ -56,8 +56,8 @@ class DealService extends BaseServiceAbs
 
             $stmtInsert = $connection->prepare("INSERT INTO contact_deal (contact_id, deal_id) VALUES (?, ?)");
 
-            foreach ($rows["contacts"] as $personId) {
-                $stmtInsert->execute([$id, $personId]);
+            foreach ($rows["contacts"] as $contact_id) {
+                $stmtInsert->execute([$contact_id, $id]);
             }
 
             $connection->commit();
