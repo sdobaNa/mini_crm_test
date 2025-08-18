@@ -214,11 +214,10 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
         })
-            .then(res => res.json())
-            .then(json => {
-                alert("Сохранено");
+            .then(res => {
+                res.json()
                 loadList();
-            });
+            })
     }
 
     function updateItem() {
@@ -241,11 +240,10 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
         })
-            .then(res => res.json())
-            .then(json => {
-                alert("Обновленно");
+            .then(res => {
+                res.json()
                 loadList();
-            });
+            })
     }
 
     function deleteItem() {
@@ -259,12 +257,11 @@
                 },
             }
         )
-            .then(res => res.json())
-            .then(json => {
-                alert("Удалено");
+            .then(res => {
+                res.json()
                 document.getElementById('form-fields').innerHTML = '';
                 loadList();
-            });
+            })
     }
 
     // Автоматический запуск при загрузке
